@@ -248,7 +248,7 @@
 // 等待 jsPDF 載入完成
 function waitForJsPDF() {
     return new Promise((resolve) => {
-        if (typeof jsPDF !== 'undefined') {
+        if (window.jspdf && window.jspdf.jsPDF) {
             console.log('[DEBUG] jsPDF 已載入');
             resolve();
         } else {
@@ -258,11 +258,50 @@ function waitForJsPDF() {
     });
 }
 
+// 添加中文字體
+async function addChineseFont(doc) {
+    try {
+        // 使用本地字體檔案
+        const fontPath = './fonts/NotoSansTC-Light.ttf';
+        
+        // 使用 fetch 載入本地字體檔案
+        const response = await fetch(fontPath);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const fontArrayBuffer = await response.arrayBuffer();
+        
+        // 將字體轉換為 base64
+        const fontBase64 = btoa(String.fromCharCode.apply(null, new Uint8Array(fontArrayBuffer)));
+        
+        // 添加字體到 jsPDF
+        doc.addFileToVFS('NotoSansTC-Light.ttf', fontBase64);
+        doc.addFont('NotoSansTC-Light.ttf', 'NotoSansTC-Light', 'normal');
+        doc.setFont('NotoSansTC-Light');
+        
+        console.log('[DEBUG] 中文字體已成功載入');
+    } catch (error) {
+        console.error('[DEBUG] 載入中文字體時發生錯誤:', error);
+        alert('載入中文字體失敗，PDF 中的中文可能會顯示為亂碼。');
+    }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('[DEBUG] DOMContentLoaded 事件已觸發。腳本開始執行...');
     
     // 等待 jsPDF 載入
     await waitForJsPDF();
+    
+    // 確保 jsPDF 可用
+    if (!window.jspdf || !window.jspdf.jsPDF) {
+        console.error('[DEBUG] jsPDF 載入失敗');
+        alert('PDF 生成工具載入失敗，請重新整理頁面或檢查網路連線。');
+        return;
+    }
+
+    // 初始化 jsPDF
+    window.jsPDF = window.jspdf.jsPDF;
+    console.log('[DEBUG] jsPDF 初始化完成');
 
     // --- 1. DOM 元素選取與驗證 ---
     let textInput, fontSizeSlider, fontSizeValue, previewText, generatePdfBtn;
@@ -407,25 +446,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             let doc;
             try {
-                // 檢查 jsPDF 是否已定義
-                if (typeof jsPDF === 'undefined') {
-                    console.error('[DEBUG] 錯誤: jsPDF 仍未定義。嘗試使用 window.jspdf');
-                    
-                    // 嘗試其他可能的 jsPDF 載入方式
-                    if (typeof window.jspdf !== 'undefined' && window.jspdf.jsPDF) {
-                        console.log('[DEBUG] 找到 window.jspdf.jsPDF，使用此版本');
-                        window.jsPDF = window.jspdf.jsPDF;
-                    } else {
-                        console.error('[DEBUG] 無法找到任何 jsPDF 實例');
-                        alert('錯誤: PDF 生成工具 (jsPDF) 未載入，無法生成 PDF。\n請檢查網路連線或稍後再試。');
-                        return;
-                    }
-                }
-                
-                // 使用正確的 jsPDF 建構函式
-                const jsPDFConstructor = window.jsPDF || jsPDF;
-                doc = new jsPDFConstructor();
+                // 使用 window.jsPDF 創建實例
+                doc = new window.jsPDF();
                 console.log('[DEBUG] jsPDF 實例已創建。');
+                
+                // 添加中文字體支援
+                await addChineseFont(doc);
             } catch (e) {
                 console.error('[DEBUG] 創建 jsPDF 實例時發生錯誤:', e);
                 alert('創建 PDF 處理器時發生嚴重錯誤，無法繼續。請檢查 jsPDF 庫是否正確載入。');
@@ -435,14 +461,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             const text = textInput.value;
             const currentFontSizePx = parseFloat(fontSizeSlider.value);
 
-            // 字體設定 - 由於無法確保字體檔案存在，先使用預設字體
-            // const fontURL = './fonts/NotoSansTC-Light.ttf';
-            // const fontVFSRegisterName = 'NotoSansTC-Light.ttf';
-            // const fontNameToUseInPDF = 'NotoSansTC-Light';
-
-            console.log('[DEBUG] 使用預設字體進行 PDF 生成...');
-            // await setupExternalFont(doc, fontURL, fontVFSRegisterName, fontNameToUseInPDF);
-
             // --- PDF 內容生成邏輯 ---
             try {
                 const fontSizeForPdf = currentFontSizePx * (72 / 96); // px to pt 轉換
@@ -451,10 +469,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 const pageWidth = doc.internal.pageSize.getWidth();
                 const pageHeight = doc.internal.pageSize.getHeight();
-                const margin = 10;
+                const margin = 20; // 增加邊距
                 const maxTextWidth = pageWidth - (2 * margin);
                 let y = margin;
-                const lineHeight = doc.getLineHeight() / doc.internal.scaleFactor * 1.15;
+                const lineHeight = doc.getLineHeight() / doc.internal.scaleFactor * 1.2; // 增加行高
 
                 console.log(`[DEBUG] 頁面設定 - 寬度: ${pageWidth}, 高度: ${pageHeight}, 邊距: ${margin}, 行高: ${lineHeight}`);
 
