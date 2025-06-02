@@ -1,142 +1,244 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const textInput = document.getElementById('textInput');
-    const fontSizeSlider = document.getElementById('fontSizeSlider');
-    const fontSizeValue = document.getElementById('fontSizeValue');
-    const previewText = document.getElementById('previewText');
-    const generatePdfBtn = document.getElementById('generatePdfBtn');
+    console.log('[DEBUG] DOMContentLoaded 事件已觸發。腳本開始執行...');
 
-    // 預設字體大小和預覽寬度 (這些常數來自您之前的程式碼片段)
+    // --- 1. DOM 元素選取與驗證 ---
+    let textInput, fontSizeSlider, fontSizeValue, previewText, generatePdfBtn;
+    try {
+        textInput = document.getElementById('textInput');
+        fontSizeSlider = document.getElementById('fontSizeSlider');
+        fontSizeValue = document.getElementById('fontSizeValue');
+        previewText = document.getElementById('previewText');
+        generatePdfBtn = document.getElementById('generatePdfBtn');
+
+        console.log('[DEBUG] textInput:', textInput ? '找到' : '未找到');
+        console.log('[DEBUG] fontSizeSlider:', fontSizeSlider ? '找到' : '未找到');
+        console.log('[DEBUG] fontSizeValue:', fontSizeValue ? '找到' : '未找到');
+        console.log('[DEBUG] previewText:', previewText ? '找到' : '未找到');
+        console.log('[DEBUG] generatePdfBtn:', generatePdfBtn ? '找到' : '未找到');
+
+        if (!textInput || !fontSizeSlider || !fontSizeValue || !previewText || !generatePdfBtn) {
+            console.error('[DEBUG] 錯誤：一個或多個必要的 HTML 元素未找到。請仔細檢查 HTML 中的 ID 是否與 JavaScript 中的完全一致 (大小寫敏感)。');
+            alert('頁面初始化錯誤：找不到必要的 HTML 元素。預覽和按鈕功能可能無法使用。請檢查 Console 中的詳細錯誤。');
+            return;
+        }
+        console.log('[DEBUG] 所有主要 HTML 元素已成功選取。');
+    } catch (e) {
+        console.error('[DEBUG] 嘗試選取 DOM 元素時發生嚴重錯誤:', e);
+        alert('頁面初始化時發生嚴重錯誤，無法選取 HTML 元素。');
+        return;
+    }
+
+    // --- 2. 初始設定 ---
     const DEFAULT_FONT_SIZE_PX = 16;
-    const PREVIEW_WIDTH_PX = 210 * (96 / 25.4); // A4 width in pixels at 96 DPI
-
-    // 初始化字體大小和預覽
-    if (fontSizeSlider && fontSizeValue) {
+    try {
         fontSizeSlider.value = DEFAULT_FONT_SIZE_PX;
         fontSizeValue.textContent = DEFAULT_FONT_SIZE_PX;
-        if (textInput) {
-            updatePreview();
+        updatePreview();
+        console.log('[DEBUG] 字體大小和預覽已初始化。');
+    } catch (e) {
+        console.error('[DEBUG] 初始化字體大小或預覽時發生錯誤:', e);
+    }
+
+    // --- 3. updatePreview 函數定義 ---
+    function updatePreview() {
+        if (!textInput || !previewText || !fontSizeSlider) {
+            console.warn('[DEBUG] updatePreview: textInput, previewText, 或 fontSizeSlider 在函數執行時缺失。');
+            return;
+        }
+        try {
+            const text = textInput.value;
+            const fontSize = fontSizeSlider.value + 'px';
+
+            previewText.style.fontSize = fontSize;
+            previewText.textContent = text;
+        } catch (e) {
+            console.error('[DEBUG] updatePreview 函數內部執行時發生錯誤:', e);
         }
     }
 
-    // 更新預覽文字的函數
-    function updatePreview() {
-        if (!textInput || !previewText || !fontSizeSlider) return;
-
-        const text = textInput.value;
-        const fontSize = fontSizeSlider.value + 'px';
-
-        previewText.style.fontSize = fontSize;
-        previewText.textContent = text; // 直接顯示文字，換行等由CSS處理 (white-space: pre-wrap;)
-    }
-
-    if (textInput) {
-        textInput.addEventListener('input', updatePreview);
-    }
-    if (fontSizeSlider) {
+    // --- 4. 預覽相關的事件監聽器 ---
+    try {
+        textInput.addEventListener('input', () => {
+            updatePreview();
+        });
         fontSizeSlider.addEventListener('input', () => {
             if (fontSizeValue) {
                 fontSizeValue.textContent = fontSizeSlider.value;
             }
             updatePreview();
         });
+        console.log('[DEBUG] 預覽相關的事件監聽器已成功附加。');
+    } catch (e) {
+        console.error('[DEBUG] 附加預覽相關的事件監聽器時發生錯誤:', e);
+        alert('附加預覽更新事件監聽器時出錯。');
     }
 
-    /**
-     * 從外部 URL 載入字體並設定到 jsPDF 實例
-     * @param {jsPDF} doc - jsPDF 實例
-     * @param {string} fontURL - 字體檔案的 URL (例如 './fonts/NotoSansTC-Light.ttf')
-     * @param {string} fontVFSRegisterName - 在 VFS 中註冊的檔案名稱 (例如 'NotoSansTC-Light.ttf')
-     * @param {string} fontNameToUseInPDF - 在 setFont 中使用的字體名稱 (例如 'NotoSansTC-Light')
-     */
+    // --- 5. setupExternalFont 函數定義 ---
     async function setupExternalFont(doc, fontURL, fontVFSRegisterName, fontNameToUseInPDF) {
+        console.log(`[DEBUG] setupExternalFont 開始執行，參數: fontURL=${fontURL}, fontVFSRegisterName=${fontVFSRegisterName}, fontNameToUseInPDF=${fontNameToUseInPDF}`);
+        
         try {
+            // 檢查字體是否已經載入
+            const existingFonts = doc.getFontList();
+            console.log('[DEBUG] 現有字體列表:', existingFonts);
+            
+            if (existingFonts[fontNameToUseInPDF]) {
+                console.log(`[DEBUG] 字體 ${fontNameToUseInPDF} 已存在，直接使用`);
+                doc.setFont(fontNameToUseInPDF);
+                return;
+            }
+
+            console.log(`[DEBUG] 開始從 ${fontURL} 載入字體...`);
+            
+            // 使用 fetch 載入字體檔案
             const response = await fetch(fontURL);
             if (!response.ok) {
-                throw new Error(`無法下載字體檔案: ${response.statusText} (URL: ${fontURL})`);
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
-            const fontBlob = await response.blob();
-            const reader = new FileReader();
-            const base64Promise = new Promise((resolve, reject) => {
-                reader.onloadend = () => {
-                    const base64StringWithHeader = reader.result;
-                    const base64FontData = base64StringWithHeader.substring(base64StringWithHeader.indexOf(',') + 1);
-                    if (!base64FontData) {
-                        reject(new Error("無法從載入的檔案中提取 Base64 字串。"));
-                        return;
-                    }
-                    resolve(base64FontData);
-                };
-                reader.onerror = (error) => {
-                    reject(error);
-                };
-                reader.readAsDataURL(fontBlob);
-            });
+            
+            console.log('[DEBUG] 字體檔案 fetch 成功，開始轉換為 ArrayBuffer...');
+            const fontArrayBuffer = await response.arrayBuffer();
+            console.log(`[DEBUG] 字體檔案載入完成，大小: ${fontArrayBuffer.byteLength} bytes`);
 
-            const base64Font = await base64Promise;
+            // 將 ArrayBuffer 轉換為 base64
+            const fontUint8Array = new Uint8Array(fontArrayBuffer);
+            const fontBase64 = btoa(String.fromCharCode.apply(null, fontUint8Array));
+            console.log('[DEBUG] 字體檔案已轉換為 base64 格式');
 
-            doc.addFileToVFS(fontVFSRegisterName, base64Font);
+            // 註冊字體到 jsPDF 的虛擬檔案系統
+            doc.addFileToVFS(fontVFSRegisterName, fontBase64);
+            console.log(`[DEBUG] 字體已添加到 VFS，名稱: ${fontVFSRegisterName}`);
+
+            // 添加字體到 jsPDF
             doc.addFont(fontVFSRegisterName, fontNameToUseInPDF, 'normal');
+            console.log(`[DEBUG] 字體已註冊到 jsPDF，字體名稱: ${fontNameToUseInPDF}`);
+
+            // 設定使用該字體
             doc.setFont(fontNameToUseInPDF);
-            console.log(`字體 ${fontNameToUseInPDF} 已成功從 ${fontURL} 載入並設定。`);
+            console.log(`[DEBUG] 已切換到字體: ${fontNameToUseInPDF}`);
+
         } catch (error) {
-            console.error(`載入外部字體 ${fontNameToUseInPDF} 失敗:`, error);
-            alert(`無法載入自訂字體 ${fontNameToUseInPDF}。\n錯誤: ${error.message}\nPDF 將嘗試使用預設字體 (Helvetica)。`);
-            doc.setFont('Helvetica'); // 設定備用字體
+            console.error(`[DEBUG] 載入字體 ${fontNameToUseInPDF} 時發生錯誤:`, error);
+            console.warn('[DEBUG] 將使用預設字體 Helvetica 作為備用');
+            
+            // 使用備用字體
+            if (doc && typeof doc.setFont === 'function') {
+                try {
+                    doc.setFont('Helvetica');
+                    console.log('[DEBUG] 已切換到備用字體 Helvetica');
+                } catch (fallbackError) {
+                    console.error('[DEBUG] 設定備用字體時也發生錯誤:', fallbackError);
+                }
+            }
+            
+            // 顯示用戶友好的錯誤訊息
+            const errorMsg = `無法載入字體 ${fontNameToUseInPDF}。\n錯誤詳情: ${error.message}\n\n將使用預設字體繼續生成 PDF。`;
+            alert(errorMsg);
         }
     }
 
-    // PDF 生成按鈕事件
-    if (generatePdfBtn) {
-        generatePdfBtn.addEventListener('click', async () => { // *** 將事件處理器設為 async ***
+    // --- 6. PDF 生成按鈕事件監聽器 ---
+    try {
+        generatePdfBtn.addEventListener('click', async () => {
+            console.log('[DEBUG] 「生成 PDF」按鈕被點擊。');
+
+            let doc;
+            try {
+                // 檢查 jsPDF 是否已定義
+                if (typeof jsPDF === 'undefined') {
+                    console.error('[DEBUG] 錯誤: jsPDF 未定義。請確保 jsPDF 函式庫已在 HTML 中正確載入 (在 script.js 之前)。');
+                    alert('錯誤: PDF 生成工具 (jsPDF) 未載入，無法生成 PDF。');
+                    return;
+                }
+                doc = new jsPDF();
+                console.log('[DEBUG] jsPDF 實例已創建。');
+            } catch (e) {
+                console.error('[DEBUG] 創建 jsPDF 實例時發生錯誤:', e);
+                alert('創建 PDF 處理器時發生嚴重錯誤，無法繼續。請檢查 jsPDF 庫是否正確載入。');
+                return;
+            }
+
             const text = textInput.value;
-            const currentFontSize = parseFloat(fontSizeSlider.value); // 從 slider 獲取字體大小 (單位：px)
-                                                                     // jsPDF 的 setFontSize 通常使用 points。
-                                                                     // 1 px 通常約為 0.75 points (在 96 DPI下)。您可以根據需要調整。
-                                                                     // 為了簡化，這裡假設 currentFontSize 是可以直接用於 PDF 的大小，
-                                                                     // 或者您可能需要轉換: const fontSizeInPoints = currentFontSize * 0.75;
+            const currentFontSizePx = parseFloat(fontSizeSlider.value);
 
-            const doc = new jsPDF();
-
-            // --- 設定字體 ---
-            // 字體檔案在 GitHub Pages 上的相對路徑
-            // 如果 script.js 在根目錄，fonts 資料夾也在根目錄下
-            const fontURL = './fonts/NotoSansTC-Light.ttf'; // *** 確保這個路徑正確 ***
+            // 字體設定
+            const fontURL = './fonts/NotoSansTC-Light.ttf';
             const fontVFSRegisterName = 'NotoSansTC-Light.ttf';
-            const fontNameToUseInPDF = 'NotoSansTC-Light'; // 這個名稱將用於 doc.setFont()
+            const fontNameToUseInPDF = 'NotoSansTC-Light';
 
-            // 等待外部字體載入並設定完成
+            console.log('[DEBUG] 準備呼叫 setupExternalFont...');
             await setupExternalFont(doc, fontURL, fontVFSRegisterName, fontNameToUseInPDF);
-            // setupExternalFont 內部如果失敗會設定 Helvetica
+            console.log('[DEBUG] setupExternalFont 函數呼叫完成。');
 
-            // --- 設定 PDF 內容 ---
-            // 注意：jsPDF 的 setFontSize 預期單位是 points。
-            // 如果您的 currentFontSize 是 px, 您可能需要轉換它。例如： (px * 72 / 96)
-            const fontSizeForPdf = currentFontSize * (72 / 96); // 將 CSS 的 px 轉換為 PDF 的 points (基於 96 DPI)
-            doc.setFontSize(fontSizeForPdf);
+            // --- PDF 內容生成邏輯 ---
+            try {
+                const fontSizeForPdf = currentFontSizePx * (72 / 96); // px to pt 轉換
+                doc.setFontSize(fontSizeForPdf);
+                console.log(`[DEBUG] PDF 字體大小設定為: ${fontSizeForPdf}pt`);
 
-            const pageWidth = doc.internal.pageSize.getWidth();
-            const pageHeight = doc.internal.pageSize.getHeight();
-            const margin = 10; // 單位：mm (jsPDF 預設單位)
-            const maxTextWidth = pageWidth - (2 * margin);
+                const pageWidth = doc.internal.pageSize.getWidth();
+                const pageHeight = doc.internal.pageSize.getHeight();
+                const margin = 10;
+                const maxTextWidth = pageWidth - (2 * margin);
+                let y = margin;
+                const lineHeight = doc.getLineHeight() / doc.internal.scaleFactor * 1.15;
 
-            let y = margin;
-            const lineHeightFactor = 1.15; // 行高係數
-            const lineHeight = doc.getLineHeight() / doc.internal.scaleFactor * lineHeightFactor; // 獲取當前字體大小下的行高 (mm)
+                console.log(`[DEBUG] 頁面設定 - 寬度: ${pageWidth}, 高度: ${pageHeight}, 邊距: ${margin}, 行高: ${lineHeight}`);
 
-            const lines = text.split('\n');
-            lines.forEach(line => {
-                const splitText = doc.splitTextToSize(line, maxTextWidth);
-                splitText.forEach(segment => {
-                    if (y + lineHeight > pageHeight - margin) {
-                        doc.addPage();
-                        y = margin;
+                if (!text || text.trim().length === 0) {
+                    console.log('[DEBUG] 沒有輸入內容，添加預設訊息');
+                    doc.text("沒有輸入內容。", margin, y);
+                } else {
+                    console.log('[DEBUG] 正在處理文字內容...');
+                    const lines = text.split('\n');
+                    
+                    for (let i = 0; i < lines.length; i++) {
+                        const line = lines[i];
+                        console.log(`[DEBUG] 處理第 ${i + 1} 行: "${line.substring(0, 50)}${line.length > 50 ? '...' : ''}"`);
+                        
+                        if (line.trim().length === 0) {
+                            // 空行也需要佔用空間
+                            if (y + lineHeight > pageHeight - margin) {
+                                doc.addPage();
+                                y = margin;
+                                console.log('[DEBUG] 添加新頁面 (空行)');
+                            }
+                            y += lineHeight;
+                            continue;
+                        }
+
+                        const splitText = doc.splitTextToSize(line, maxTextWidth);
+                        for (let j = 0; j < splitText.length; j++) {
+                            const segment = splitText[j];
+                            if (y + lineHeight > pageHeight - margin) {
+                                doc.addPage();
+                                y = margin;
+                                console.log('[DEBUG] 添加新頁面');
+                            }
+                            doc.text(segment, margin, y);
+                            y += lineHeight;
+                        }
                     }
-                    doc.text(segment, margin, y);
-                    y += lineHeight;
-                });
-            });
+                }
 
-            doc.save('generated_pdf_github_pages.pdf');
+                console.log('[DEBUG] 準備儲存 PDF...');
+                const fileName = 'generated_pdf_' + new Date().toISOString().slice(0, 19).replace(/[:\-]/g, '') + '.pdf';
+                doc.save(fileName);
+                console.log(`[DEBUG] PDF 已儲存為: ${fileName}`);
+                
+                // 顯示成功訊息
+                alert(`PDF 生成成功！\n檔案名稱: ${fileName}`);
+
+            } catch (e) {
+                console.error('[DEBUG] 生成 PDF 內容或儲存時發生錯誤:', e);
+                alert(`生成 PDF 內容或儲存時出錯: ${e.message}`);
+            }
         });
+        console.log('[DEBUG] 「生成 PDF」按鈕的事件監聽器已成功附加。');
+    } catch (e) {
+        console.error('[DEBUG] 附加「生成 PDF」按鈕事件監聽器時發生錯誤:', e);
+        alert('附加「生成 PDF」按鈕事件監聽器時出錯。');
     }
+
+    console.log('[DEBUG] script.js 的 DOMContentLoaded 處理函數執行完畢。');
 });

@@ -4,27 +4,517 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>文字內容自動調整字型並輸出 PDF</title>
-    <link rel="stylesheet" href="style.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+            font-size: 2.2em;
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 500;
+            color: #555;
+            font-size: 1.1em;
+        }
+
+        #textInput {
+            width: 100%;
+            min-height: 200px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            font-family: inherit;
+            resize: vertical;
+            transition: all 0.3s ease;
+            background: #fafafa;
+        }
+
+        #textInput:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .font-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 20px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+        }
+
+        .font-controls label {
+            margin: 0;
+            font-weight: 500;
+            color: #495057;
+            white-space: nowrap;
+        }
+
+        #fontSizeSlider {
+            flex: 1;
+            height: 8px;
+            border-radius: 4px;
+            background: #dee2e6;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        #fontSizeSlider::-webkit-slider-thumb {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #fontSizeSlider::-webkit-slider-thumb:hover {
+            background: #5a6fd8;
+            transform: scale(1.1);
+        }
+
+        #fontSizeSlider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: none;
+        }
+
+        .font-size-display {
+            min-width: 50px;
+            text-align: center;
+            font-weight: bold;
+            color: #667eea;
+            font-size: 1.1em;
+        }
+
+        .output-section {
+            border-top: 2px solid #e9ecef;
+            padding-top: 30px;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 1.5em;
+            font-weight: 400;
+        }
+
+        .preview-area {
+            min-height: 200px;
+            padding: 20px;
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            background: #fafafa;
+            margin-bottom: 20px;
+            font-family: inherit;
+            line-height: 1.6;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            transition: all 0.3s ease;
+        }
+
+        .preview-area:not(:empty) {
+            border-color: #667eea;
+            background: white;
+        }
+
+        .preview-area:empty::before {
+            content: "預覽區域 - 請在上方輸入文字以查看預覽效果";
+            color: #999;
+            font-style: italic;
+        }
+
+        #generatePdfBtn {
+            display: block;
+            width: 200px;
+            margin: 0 auto;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.1em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        #generatePdfBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        #generatePdfBtn:active {
+            transform: translateY(0);
+        }
+
+        #generatePdfBtn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+            }
+            
+            .font-controls {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+            
+            #fontSizeSlider {
+                margin: 10px 0;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <h1>文字內容自動調整字型並輸出 PDF</h1>
-
+        
         <div class="input-section">
             <label for="textInput">請輸入您的文字內容：</label>
-            <textarea id="textInput" placeholder="請在此輸入文字..."></textarea>
-            <p class="current-font-size">目前字型大小：<span id="currentFontSize">16px</span></p>
+            <textarea id="textInput" placeholder="請在此輸入文字內容，支援中文字體..."></textarea>
+            
+            <div class="font-controls">
+                <label for="fontSizeSlider">字體大小：</label>
+                <input type="range" id="fontSizeSlider" min="10" max="32" value="16" step="1">
+                <div class="font-size-display">
+                    <span id="fontSizeValue">16</span>px
+                </div>
+            </div>
         </div>
-
+        
         <div class="output-section">
             <h2>預覽區：</h2>
-            <div id="previewArea" class="preview-area">
-                </div>
+            <div id="previewText" class="preview-area"></div>
             <button id="generatePdfBtn">生成 PDF</button>
         </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="script.js"></script>
+    <script>
+// 等待 jsPDF 載入完成
+function waitForJsPDF() {
+    return new Promise((resolve) => {
+        if (typeof jsPDF !== 'undefined') {
+            console.log('[DEBUG] jsPDF 已載入');
+            resolve();
+        } else {
+            console.log('[DEBUG] 等待 jsPDF 載入...');
+            setTimeout(() => waitForJsPDF().then(resolve), 100);
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+    console.log('[DEBUG] DOMContentLoaded 事件已觸發。腳本開始執行...');
+    
+    // 等待 jsPDF 載入
+    await waitForJsPDF();
+
+    // --- 1. DOM 元素選取與驗證 ---
+    let textInput, fontSizeSlider, fontSizeValue, previewText, generatePdfBtn;
+    try {
+        textInput = document.getElementById('textInput');
+        fontSizeSlider = document.getElementById('fontSizeSlider');
+        fontSizeValue = document.getElementById('fontSizeValue');
+        previewText = document.getElementById('previewText');
+        generatePdfBtn = document.getElementById('generatePdfBtn');
+
+        console.log('[DEBUG] textInput:', textInput ? '找到' : '未找到');
+        console.log('[DEBUG] fontSizeSlider:', fontSizeSlider ? '找到' : '未找到');
+        console.log('[DEBUG] fontSizeValue:', fontSizeValue ? '找到' : '未找到');
+        console.log('[DEBUG] previewText:', previewText ? '找到' : '未找到');
+        console.log('[DEBUG] generatePdfBtn:', generatePdfBtn ? '找到' : '未找到');
+
+        if (!textInput || !fontSizeSlider || !fontSizeValue || !previewText || !generatePdfBtn) {
+            console.error('[DEBUG] 錯誤：一個或多個必要的 HTML 元素未找到。請仔細檢查 HTML 中的 ID 是否與 JavaScript 中的完全一致 (大小寫敏感)。');
+            alert('頁面初始化錯誤：找不到必要的 HTML 元素。預覽和按鈕功能可能無法使用。請檢查 Console 中的詳細錯誤。');
+            return;
+        }
+        console.log('[DEBUG] 所有主要 HTML 元素已成功選取。');
+    } catch (e) {
+        console.error('[DEBUG] 嘗試選取 DOM 元素時發生嚴重錯誤:', e);
+        alert('頁面初始化時發生嚴重錯誤，無法選取 HTML 元素。');
+        return;
+    }
+
+    // --- 2. 初始設定 ---
+    const DEFAULT_FONT_SIZE_PX = 16;
+    try {
+        fontSizeSlider.value = DEFAULT_FONT_SIZE_PX;
+        fontSizeValue.textContent = DEFAULT_FONT_SIZE_PX;
+        updatePreview();
+        console.log('[DEBUG] 字體大小和預覽已初始化。');
+    } catch (e) {
+        console.error('[DEBUG] 初始化字體大小或預覽時發生錯誤:', e);
+    }
+
+    // --- 3. updatePreview 函數定義 ---
+    function updatePreview() {
+        if (!textInput || !previewText || !fontSizeSlider) {
+            console.warn('[DEBUG] updatePreview: textInput, previewText, 或 fontSizeSlider 在函數執行時缺失。');
+            return;
+        }
+        try {
+            const text = textInput.value;
+            const fontSize = fontSizeSlider.value + 'px';
+
+            previewText.style.fontSize = fontSize;
+            previewText.textContent = text;
+        } catch (e) {
+            console.error('[DEBUG] updatePreview 函數內部執行時發生錯誤:', e);
+        }
+    }
+
+    // --- 4. 預覽相關的事件監聽器 ---
+    try {
+        textInput.addEventListener('input', () => {
+            updatePreview();
+        });
+        fontSizeSlider.addEventListener('input', () => {
+            if (fontSizeValue) {
+                fontSizeValue.textContent = fontSizeSlider.value;
+            }
+            updatePreview();
+        });
+        console.log('[DEBUG] 預覽相關的事件監聽器已成功附加。');
+    } catch (e) {
+        console.error('[DEBUG] 附加預覽相關的事件監聽器時發生錯誤:', e);
+        alert('附加預覽更新事件監聽器時出錯。');
+    }
+
+    // --- 5. setupExternalFont 函數定義 ---
+    async function setupExternalFont(doc, fontURL, fontVFSRegisterName, fontNameToUseInPDF) {
+        console.log(`[DEBUG] setupExternalFont 開始執行，參數: fontURL=${fontURL}, fontVFSRegisterName=${fontVFSRegisterName}, fontNameToUseInPDF=${fontNameToUseInPDF}`);
+        
+        try {
+            // 檢查字體是否已經載入
+            const existingFonts = doc.getFontList();
+            console.log('[DEBUG] 現有字體列表:', existingFonts);
+            
+            if (existingFonts[fontNameToUseInPDF]) {
+                console.log(`[DEBUG] 字體 ${fontNameToUseInPDF} 已存在，直接使用`);
+                doc.setFont(fontNameToUseInPDF);
+                return;
+            }
+
+            console.log(`[DEBUG] 開始從 ${fontURL} 載入字體...`);
+            
+            // 使用 fetch 載入字體檔案
+            const response = await fetch(fontURL);
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            console.log('[DEBUG] 字體檔案 fetch 成功，開始轉換為 ArrayBuffer...');
+            const fontArrayBuffer = await response.arrayBuffer();
+            console.log(`[DEBUG] 字體檔案載入完成，大小: ${fontArrayBuffer.byteLength} bytes`);
+
+            // 將 ArrayBuffer 轉換為 base64
+            const fontUint8Array = new Uint8Array(fontArrayBuffer);
+            const fontBase64 = btoa(String.fromCharCode.apply(null, fontUint8Array));
+            console.log('[DEBUG] 字體檔案已轉換為 base64 格式');
+
+            // 註冊字體到 jsPDF 的虛擬檔案系統
+            doc.addFileToVFS(fontVFSRegisterName, fontBase64);
+            console.log(`[DEBUG] 字體已添加到 VFS，名稱: ${fontVFSRegisterName}`);
+
+            // 添加字體到 jsPDF
+            doc.addFont(fontVFSRegisterName, fontNameToUseInPDF, 'normal');
+            console.log(`[DEBUG] 字體已註冊到 jsPDF，字體名稱: ${fontNameToUseInPDF}`);
+
+            // 設定使用該字體
+            doc.setFont(fontNameToUseInPDF);
+            console.log(`[DEBUG] 已切換到字體: ${fontNameToUseInPDF}`);
+
+        } catch (error) {
+            console.error(`[DEBUG] 載入字體 ${fontNameToUseInPDF} 時發生錯誤:`, error);
+            console.warn('[DEBUG] 將使用預設字體 Helvetica 作為備用');
+            
+            // 使用備用字體
+            if (doc && typeof doc.setFont === 'function') {
+                try {
+                    doc.setFont('Helvetica');
+                    console.log('[DEBUG] 已切換到備用字體 Helvetica');
+                } catch (fallbackError) {
+                    console.error('[DEBUG] 設定備用字體時也發生錯誤:', fallbackError);
+                }
+            }
+            
+            // 顯示用戶友好的錯誤訊息
+            const errorMsg = `無法載入字體 ${fontNameToUseInPDF}。\n錯誤詳情: ${error.message}\n\n將使用預設字體繼續生成 PDF。`;
+            alert(errorMsg);
+        }
+    }
+
+    // --- 6. PDF 生成按鈕事件監聽器 ---
+    try {
+        generatePdfBtn.addEventListener('click', async () => {
+            console.log('[DEBUG] 「生成 PDF」按鈕被點擊。');
+
+            let doc;
+            try {
+                // 檢查 jsPDF 是否已定義
+                if (typeof jsPDF === 'undefined') {
+                    console.error('[DEBUG] 錯誤: jsPDF 仍未定義。嘗試使用 window.jspdf');
+                    
+                    // 嘗試其他可能的 jsPDF 載入方式
+                    if (typeof window.jspdf !== 'undefined' && window.jspdf.jsPDF) {
+                        console.log('[DEBUG] 找到 window.jspdf.jsPDF，使用此版本');
+                        window.jsPDF = window.jspdf.jsPDF;
+                    } else {
+                        console.error('[DEBUG] 無法找到任何 jsPDF 實例');
+                        alert('錯誤: PDF 生成工具 (jsPDF) 未載入，無法生成 PDF。\n請檢查網路連線或稍後再試。');
+                        return;
+                    }
+                }
+                
+                // 使用正確的 jsPDF 建構函式
+                const jsPDFConstructor = window.jsPDF || jsPDF;
+                doc = new jsPDFConstructor();
+                console.log('[DEBUG] jsPDF 實例已創建。');
+            } catch (e) {
+                console.error('[DEBUG] 創建 jsPDF 實例時發生錯誤:', e);
+                alert('創建 PDF 處理器時發生嚴重錯誤，無法繼續。請檢查 jsPDF 庫是否正確載入。');
+                return;
+            }
+
+            const text = textInput.value;
+            const currentFontSizePx = parseFloat(fontSizeSlider.value);
+
+            // 字體設定 - 由於無法確保字體檔案存在，先使用預設字體
+            // const fontURL = './fonts/NotoSansTC-Light.ttf';
+            // const fontVFSRegisterName = 'NotoSansTC-Light.ttf';
+            // const fontNameToUseInPDF = 'NotoSansTC-Light';
+
+            console.log('[DEBUG] 使用預設字體進行 PDF 生成...');
+            // await setupExternalFont(doc, fontURL, fontVFSRegisterName, fontNameToUseInPDF);
+
+            // --- PDF 內容生成邏輯 ---
+            try {
+                const fontSizeForPdf = currentFontSizePx * (72 / 96); // px to pt 轉換
+                doc.setFontSize(fontSizeForPdf);
+                console.log(`[DEBUG] PDF 字體大小設定為: ${fontSizeForPdf}pt`);
+
+                const pageWidth = doc.internal.pageSize.getWidth();
+                const pageHeight = doc.internal.pageSize.getHeight();
+                const margin = 10;
+                const maxTextWidth = pageWidth - (2 * margin);
+                let y = margin;
+                const lineHeight = doc.getLineHeight() / doc.internal.scaleFactor * 1.15;
+
+                console.log(`[DEBUG] 頁面設定 - 寬度: ${pageWidth}, 高度: ${pageHeight}, 邊距: ${margin}, 行高: ${lineHeight}`);
+
+                if (!text || text.trim().length === 0) {
+                    console.log('[DEBUG] 沒有輸入內容，添加預設訊息');
+                    doc.text("沒有輸入內容。", margin, y);
+                } else {
+                    console.log('[DEBUG] 正在處理文字內容...');
+                    const lines = text.split('\n');
+                    
+                    for (let i = 0; i < lines.length; i++) {
+                        const line = lines[i];
+                        console.log(`[DEBUG] 處理第 ${i + 1} 行: "${line.substring(0, 50)}${line.length > 50 ? '...' : ''}"`);
+                        
+                        if (line.trim().length === 0) {
+                            // 空行也需要佔用空間
+                            if (y + lineHeight > pageHeight - margin) {
+                                doc.addPage();
+                                y = margin;
+                                console.log('[DEBUG] 添加新頁面 (空行)');
+                            }
+                            y += lineHeight;
+                            continue;
+                        }
+
+                        const splitText = doc.splitTextToSize(line, maxTextWidth);
+                        for (let j = 0; j < splitText.length; j++) {
+                            const segment = splitText[j];
+                            if (y + lineHeight > pageHeight - margin) {
+                                doc.addPage();
+                                y = margin;
+                                console.log('[DEBUG] 添加新頁面');
+                            }
+                            doc.text(segment, margin, y);
+                            y += lineHeight;
+                        }
+                    }
+                }
+
+                console.log('[DEBUG] 準備儲存 PDF...');
+                const fileName = 'generated_pdf_' + new Date().toISOString().slice(0, 19).replace(/[:\-]/g, '') + '.pdf';
+                doc.save(fileName);
+                console.log(`[DEBUG] PDF 已儲存為: ${fileName}`);
+                
+                // 顯示成功訊息
+                alert(`PDF 生成成功！\n檔案名稱: ${fileName}`);
+
+            } catch (e) {
+                console.error('[DEBUG] 生成 PDF 內容或儲存時發生錯誤:', e);
+                alert(`生成 PDF 內容或儲存時出錯: ${e.message}`);
+            }
+        });
+        console.log('[DEBUG] 「生成 PDF」按鈕的事件監聽器已成功附加。');
+    } catch (e) {
+        console.error('[DEBUG] 附加「生成 PDF」按鈕事件監聽器時發生錯誤:', e);
+        alert('附加「生成 PDF」按鈕事件監聽器時出錯。');
+    }
+
+    console.log('[DEBUG] script.js 的 DOMContentLoaded 處理函數執行完畢。');
+});
+    </script>
 </body>
 </html>
