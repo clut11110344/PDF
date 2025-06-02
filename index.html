@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BY2演唱會 歌曲搜尋器</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <link rel="stylesheet" href="style.css">
+
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='currentColor' class='bi bi-search' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0'/%3E%3C/svg%3E" type="image/svg+xml">
+</head>
+<body>
+    <div class="container">
+        <h1>BY2演唱會 歌曲搜尋器</h1>
+        <p class="description">從歌單中快速搜尋歌曲!</p>
+
+        <div class="search-controls">
+            <input type="text" id="songNameInput" placeholder="請輸入歌名，例如：心牆" aria-label="歌曲名稱輸入框" autofocus>
+            <button id="searchButton"><i class="bi bi-search"></i> 搜尋</button>
+            <button id="clearButton" class="secondary-button"><i class="bi bi-x-circle"></i> 清除</button>
+        </div>
+
+        <div id="loadingStatus" class="status-message loading">
+            <i class="bi bi-arrow-clockwise loading-spinner"></i> 初始化中...
+        </div>
+        
+        <div id="searchResults" class="results-container">
+            <p class="initial-info">請輸入歌名進行搜尋。</p>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,422 @@
+/* style.css */
+
+/* --- 基本變數定義 (方便管理顏色) --- */
+:root {
+    /* 淺色模式 */
+    --body-bg: #e9ecef; /* 頁面背景 */
+    --container-bg: #ffffff; /* 容器背景 */
+    --text-color: #343a40; /* 主要文字顏色 */
+    --header-color: #0056b3; /* 標題顏色 */
+    --description-color: #6c757d; /* 說明文字顏色 */
+    --border-color: #ced4da; /* 輸入框邊框 */
+    --box-shadow-light: rgba(0, 0, 0, 0.15); /* 容器陰影 */
+    --input-shadow-inset: rgba(0, 0, 0, 0.05); /* 輸入框內陰影 */
+    --button-bg-primary: #007bff; /* 主要按鈕背景 */
+    --button-hover-primary: #0056b3; /* 主要按鈕懸停 */
+    --button-shadow-primary: rgba(0, 0, 0, 0.1);
+    --button-bg-secondary: #6c757d; /* 次要按鈕背景 */
+    --button-hover-secondary: #5a6268; /* 次要按鈕懸停 */
+    --results-bg: #f8f9fa; /* 結果區塊背景 */
+    --results-border: #e9ecef; /* 結果區塊邊框 */
+    --li-border: #dee2e6; /* 列表項分隔線 */
+    --li-text-color: #495057; /* 列表項文字顏色 */
+    --link-color: #007bff; /* 連結顏色 */
+    --link-hover-color: #0056b3; /* 連結懸停 */
+    --status-loading-bg: #e0f2f7;
+    --status-loading-text: #007bff;
+    --status-success-bg: #d4edda;
+    --status-success-text: #155724;
+    --status-warning-bg: #fff3cd;
+    --status-warning-text: #856404;
+    --status-error-bg: #f8d7da;
+    --status-error-text: #721c24;
+}
+
+/* --- 深色模式設定 --- */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --body-bg: #2c2c2c; /* 深色背景 */
+        --container-bg: #3a3a3a; /* 深色容器 */
+        --text-color: #e0e0e0; /* 淺色文字 */
+        --header-color: #90caf9; /* 淺藍標題 */
+        --description-color: #bbbbbb;
+        --border-color: #555555;
+        --box-shadow-light: rgba(0, 0, 0, 0.3);
+        --input-shadow-inset: rgba(255, 255, 255, 0.05);
+        --button-bg-primary: #4a90e2; /* 深色模式主按鈕 */
+        --button-hover-primary: #6ab7ff;
+        --button-shadow-primary: rgba(0, 0, 0, 0.2);
+        --button-bg-secondary: #555555;
+        --button-hover-secondary: #777777;
+        --results-bg: #303030; /* 深色結果區塊 */
+        --results-border: #444444;
+        --li-border: #4a4a4a;
+        --li-text-color: #cccccc;
+        --link-color: #81d4fa; /* 深色模式連結 */
+        --link-hover-color: #4fc3f7;
+        --status-loading-bg: #4a6c80;
+        --status-loading-text: #90caf9;
+        --status-success-bg: #4a6c4b;
+        --status-success-text: #a5d6a7;
+        --status-warning-bg: #80774c;
+        --status-warning-text: #ffeb3b;
+        --status-error-bg: #804b4c;
+        --status-error-text: #ef9a9a;
+    }
+}
+
+/* --- 通用樣式 --- */
+body {
+    font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    background-color: var(--body-bg);
+    color: var(--text-color);
+    line-height: 1.6;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    box-sizing: border-box;
+    transition: background-color 0.3s ease, color 0.3s ease; /* 深色模式平滑過渡 */
+}
+
+.container {
+    background-color: var(--container-bg);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px var(--box-shadow-light);
+    max-width: 800px;
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 20px;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* 標題 */
+h1 {
+    text-align: center;
+    color: var(--header-color);
+    margin-bottom: 15px;
+    font-size: 2.2em;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+.description {
+    text-align: center;
+    color: var(--description-color);
+    margin-bottom: 30px;
+    font-size: 1.1em;
+    transition: color 0.3s ease;
+}
+
+/* 搜尋區塊 */
+.search-controls {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+input[type="text"] {
+    flex-grow: 1;
+    padding: 12px 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 1em;
+    outline: none;
+    transition: all 0.3s ease;
+    box-shadow: inset 0 1px 3px var(--input-shadow-inset);
+    background-color: var(--container-bg); /* 背景色與容器一致 */
+    color: var(--text-color); /* 文字顏色 */
+}
+
+input[type="text"]:focus {
+    border-color: var(--button-bg-primary);
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+button {
+    padding: 12px 25px;
+    background-color: var(--button-bg-primary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
+    box-shadow: 0 2px 5px var(--button-shadow-primary);
+    white-space: nowrap;
+    display: flex; /* 讓圖示和文字水平排列 */
+    align-items: center; /* 垂直居中 */
+    gap: 8px; /* 圖示與文字間距 */
+    justify-content: center; /* 圖示和文字居中 */
+}
+
+button:hover {
+    background-color: var(--button-hover-primary);
+    box-shadow: 0 4px 10px var(--button-shadow-primary);
+}
+
+button:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 3px var(--button-shadow-primary);
+}
+
+button:disabled {
+    background-color: #cccccc !important; /* 強制覆蓋 */
+    cursor: not-allowed;
+    box-shadow: none;
+    color: #888888; /* 禁用時的文字顏色 */
+}
+
+/* 次要按鈕樣式 */
+.secondary-button {
+    background-color: var(--button-bg-secondary);
+}
+
+.secondary-button:hover {
+    background-color: var(--button-hover-secondary);
+}
+
+/* 狀態訊息 */
+.status-message {
+    text-align: center;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-weight: bold;
+    opacity: 1;
+    transition: opacity 0.5s ease, background-color 0.3s ease, color 0.3s ease;
+}
+
+.status-message.loading {
+    background-color: var(--status-loading-bg);
+    color: var(--status-loading-text);
+}
+.status-message.success {
+    background-color: var(--status-success-bg);
+    color: var(--status-success-text);
+}
+.status-message.warning {
+    background-color: var(--status-warning-bg);
+    color: var(--status-warning-text);
+}
+.status-message.error {
+    background-color: var(--status-error-bg);
+    color: var(--status-error-text);
+}
+.status-message.hidden {
+    opacity: 0;
+    height: 0;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+}
+
+/* 載入圖示動畫 */
+.loading-spinner {
+    animation: spinner 1s linear infinite;
+    display: inline-block; /* 確保圖示佔據空間 */
+    margin-right: 5px; /* 圖示與文字間距 */
+}
+
+@keyframes spinner {
+    to { transform: rotate(360deg); }
+}
+
+/* 搜尋結果 */
+.results-container {
+    background-color: var(--results-bg);
+    border: 1px solid var(--results-border);
+    border-radius: 8px;
+    padding: 20px;
+    min-height: 120px;
+    overflow-y: auto;
+    max-height: 450px;
+    box-shadow: inset 0 1px 5px rgba(0, 0, 0, 0.05);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.results-container h3 {
+    color: var(--header-color); /* 與主標題顏色一致 */
+    margin-top: 0;
+    margin-bottom: 15px;
+    text-align: center;
+    font-size: 1.3em;
+    transition: color 0.3s ease;
+}
+
+.results-container ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.results-container li {
+    padding: 12px 0;
+    border-bottom: 1px dashed var(--li-border);
+    font-size: 0.95em;
+    display: flex;
+    flex-direction: column;
+    word-break: break-word;
+    transition: border-color 0.3s ease;
+}
+
+.results-container li:last-child {
+    border-bottom: none;
+}
+
+.results-container li strong {
+    color: var(--li-text-color);
+    font-weight: 600;
+    margin-bottom: 5px;
+    transition: color 0.3s ease;
+}
+
+/* 「點此觀看」按鈕的樣式 */
+.watch-button {
+    /* 繼承通用按鈕的樣式基礎 */
+    padding: 8px 15px; /* 比主按鈕小一點 */
+    background-color: #dc3545; /* YouTube 紅色 */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.9em; /* 比主按鈕小一點 */
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.1s ease, box-shadow 0.3s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    white-space: nowrap;
+    display: flex; /* 讓圖示和文字水平排列 */
+    align-items: center; /* 垂直居中 */
+    gap: 5px; /* 圖示與文字間距 */
+    justify-content: center; /* 居中 */
+    margin-top: 8px; /* 與上方文字的間距 */
+    align-self: flex-start; /* 靠左對齊 */
+    max-width: fit-content; /* 讓按鈕寬度只夠內容 */
+}
+
+.watch-button:hover {
+    background-color: #c82333; /* 懸停時深一點的紅色 */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+}
+
+.watch-button:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* 深色模式下的「點此觀看」按鈕顏色 */
+@media (prefers-color-scheme: dark) {
+    .watch-button {
+        background-color: #ef5350; /* 深色模式下的 YouTube 紅色 */
+    }
+    .watch-button:hover {
+        background-color: #ff7961;
+    }
+}
+
+/* 確保 Bootstrap Icons 本身有正確大小 */
+.bi {
+    vertical-align: -0.125em; /* 調整圖示垂直對齊 */
+    font-size: 1em; /* 確保圖示大小與父元素字體大小一致 */
+}
+
+
+.initial-info {
+    text-align: center;
+    color: var(--description-color);
+    font-style: italic;
+    padding: 20px;
+}
+
+/* --- 手機響應式調整 --- */
+@media (max-width: 768px) { /* 平板和手機 */
+    body {
+        padding: 15px;
+    }
+    .container {
+        padding: 25px;
+        margin-top: 15px;
+        border-radius: 10px; /* 小螢幕圓角小一點 */
+    }
+    h1 {
+        font-size: 1.8em;
+    }
+    .description {
+        font-size: 1em;
+        margin-bottom: 20px;
+    }
+    .search-controls {
+        flex-direction: column; /* 輸入框和按鈕垂直排列 */
+        gap: 8px; /* 調整垂直間距 */
+    }
+    /* 核心修正：讓輸入框在小螢幕上完全佔滿寬度，並確保沒有過多餘白 */
+    input[type="text"] {
+        width: 100%; /* 強制佔滿容器寬度 */
+        flex-basis: auto; /* 讓 flex 項目根據內容調整 */
+        flex-shrink: 1; /* 允許縮小 */
+        box-sizing: border-box; /* 確保 padding 不會導致溢出 */
+    }
+    /* 核心修正：讓按鈕在小螢幕上完全佔滿寬度 */
+    button {
+        width: 100%; /* 強制佔滿容器寬度 */
+        box-sizing: border-box; /* 確保 padding 不會導致溢出 */
+        padding: 10px 12px; /* 調整內邊距 */
+        font-size: 0.95em;
+    }
+
+    .status-message {
+        padding: 10px;
+        font-size: 0.9em;
+    }
+    .results-container {
+        padding: 15px;
+        min-height: 100px;
+        max-height: 350px;
+    }
+    .results-container h3 {
+        font-size: 1.2em;
+    }
+    .results-container ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .results-container li {
+        font-size: 0.9em;
+        padding: 10px 0;
+    }
+    /* 針對手機上「點此觀看」按鈕的字體大小調整 */
+    .watch-button {
+        font-size: 0.95em; /* 調整為更適合手機的字體大小 */
+        padding: 6px 12px; /* 調整內邊距 */
+    }
+}
+
+@media (max-width: 480px) { /* 更小的手機 */
+    body {
+        padding: 10px;
+    }
+    .container {
+        padding: 15px;
+        margin-top: 10px;
+        border-radius: 8px;
+    }
+    h1 {
+        font-size: 1.6em;
+    }
+    .description {
+        font-size: 0.9em;
+        margin-bottom: 15px;
+    }
+    .status-message {
+        margin-bottom: 15px;
+    }
+    .results-container {
+        min-height: 80px;
+        max-height: 300px;
+    }
+}
